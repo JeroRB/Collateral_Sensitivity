@@ -1,0 +1,1294 @@
+---
+title: "Beta-lactamase expression induces Collateral Sensitivity"
+author: "Cristina Herencias, Laura Álvaro-Llorente, Paula Ramiro-Martínez, Ariadna Fernández-Calvet, Ada Muñoz-Cazalla, Javier DelaFuente, Fabrice E Graf, Laura Jaraba-Soto, Juan Antonio Castillo-Polo, Rafael Cantón, Álvaro San Millán, Jerónimo Rodríguez-Beltrán"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+---
+
+
+This code reproduces all figures and analyses associated with the publication "β-lactamase expression induces collateral sensitivity
+in Escherichia coli" by Cristina Herencias et al. published in Nature Communications 2024. 
+
+
+```{r include=FALSE}
+knitr::opts_chunk$set(warning=F, message=F)
+```
+
+
+## Define a path were Source Data is stored
+```{r}
+path_to_souce_data <- "~/Science/MEGA/Scientific Projects/IRYCIS/CS/Refereees/"
+```
+
+## Loading required libraries
+```{r }
+
+library(tidyverse)
+library(corrplot)
+library(ggpubr)
+library(ggridges)
+library(circlize)
+library(Hmisc)
+library(psych)
+library(readxl)
+library(broom)
+library(DescTools)
+library(gplots)
+```
+
+## Figure 1
+### Figure 1a
+
+```{r}
+#read and arrange data
+tc_final <- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="MIC Data") %>% filter(Figure=="Figure1")
+
+tc_f <- tc_final %>% 
+  group_by(Antibiotic, Original_name,) %>% 
+  mutate(median=median(MIC, na.rm = T))
+
+tc_f %>% 
+  ggplot(aes(x=fct_relevel(Original_name, 
+                           "J53", "pOXA-48WT", "pOXA-48DEL") , y= MIC, fill=Original_name, color=Original_name))+
+  geom_jitter(height = 0.25, width=.05, alpha=.5)+
+  stat_summary(fun.y = median, fun.ymin = median, fun.ymax = median,
+               geom = "crossbar", width = 0.5, size=.5)+
+  scale_y_continuous(trans='log2',breaks = c(0.015, 0.03, 0.06, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192))+
+  facet_wrap(~ Antibiotic, scales="free_y")+
+  scale_colour_manual(values= c("black", "darkblue", "darkred", "blue", "navyblue","blue2", "blue3","blue4", "blue5", "lightblue", "blue1")) +
+  labs(y = "Concentration (mg/L)" , x="")+
+  theme_bw()+ 
+  theme(legend.position="none", text=element_text(size=10),
+        axis.text.x = element_text(angle=90, vjust=1),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        aspect.ratio = 1)+
+  ggtitle("Figure 1a")
+
+```
+
+#### Some stats on figure 1a
+```{r, echo=FALSE}
+
+#Prepare data
+datos_AZI<-tc_f %>% filter(Antibiotic=="AZI")
+datos_COL<-tc_f %>% filter(Antibiotic=="COL")
+datos_ERT<-tc_f %>% filter(Antibiotic=="ERT")
+datos_AMC<-tc_f %>% filter(Antibiotic=="AMC")
+
+#test normality
+shapiro.test(datos_AZI$median)
+shapiro.test(datos_COL$median)
+shapiro.test(datos_AMC$median)
+shapiro.test(datos_ERT$median)
+
+#Perform statistical analyses
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48WT"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48DEL"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48PV-E"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48PV-K"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48PV-D"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48PV-B"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="TCpOXA-48PV-O"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48WT"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48DEL"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48PV-E"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48PV-K"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48PV-D"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48PV-B"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="TCpOXA-48PV-O"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48WT"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48DEL"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48PV-E"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48PV-K"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48PV-D"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48PV-B"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="TCpOXA-48PV-O"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48WT"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48DEL"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48PV-E"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48PV-K"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48PV-D"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48PV-B"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="TCpOXA-48PV-O"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+
+```
+
+
+### Figure 1b
+```{r}
+
+#Load data
+viables <- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="Figure 1b") 
+
+#Data wrangling (median calculation)
+viables_azi<- viables %>% 
+  group_by(Antibiotic, Strain, Concentration) %>% 
+  summarise(media=median(viable_cells), iqr=IQR(viable_cells), sd=sd(viable_cells)) %>% 
+  filter(Antibiotic=="azi") 
+
+#plot AZI
+ggplot()+
+  geom_bar(data=viables_azi, aes(x=Strain, y=media, color=Strain, fill=Strain), stat = "identity", alpha=0.2)+
+  geom_errorbar(data=viables_azi,aes(x= Strain, ymin=media-iqr, ymax=media +iqr),width=0)+
+  geom_point(data=viables %>% filter(Antibiotic=="azi"), aes( x=Strain, y = viable_cells, color=Strain, fill=Strain), size=.5) +
+  facet_grid(~Concentration)+
+  scale_fill_manual(values= c("black", "darkred", "darkblue")) +
+  scale_color_manual(values= c("black", "darkred", "darkblue")) +
+  #scale_fill_brewer(palette = "Set2")+
+  theme_bw()+ 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(y = "viable cell count (cfu/ml)" , x="")+
+  theme(axis.text.x = element_text(angle=90, hjust=0))+
+  scale_y_continuous(trans='log10')+
+  theme(text=element_text(size=10))+
+  ggtitle("Azithromycin survivors")
+
+viables_col<- viables %>% 
+  group_by(Antibiotic, Strain, Concentration) %>% 
+  summarise(media=median(viable_cells), iqr=IQR(viable_cells), sd=sd(viable_cells)) %>% 
+  filter(Antibiotic=="col") 
+
+#plot col
+ggplot()+
+  geom_bar(data=viables_col, aes(x=Strain, y=media, color=Strain, fill=Strain), stat = "identity", alpha=0.2)+
+  geom_errorbar(data=viables_col,aes(x= Strain, ymin=media-iqr, ymax=media +iqr),width=0)+
+  geom_point(data=viables %>%  filter(Antibiotic=="col"), aes( x=Strain, y = viable_cells, color=Strain, fill=Strain), size=.5) +
+  facet_grid(~Concentration)+
+  scale_fill_manual(values= c("black", "darkred", "darkblue")) +
+  scale_color_manual(values= c("black", "darkred", "darkblue")) +
+  #scale_fill_brewer(palette = "Set2")+
+  theme_bw()+ 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  labs(y = "viable cell count (cfu/ml)" , x="")+
+  theme(axis.text.x = element_text(angle=90, hjust=0))+
+  scale_y_continuous(trans='log10')+
+  theme(text=element_text(size=10))+
+  ggtitle("colistin survivors")
+
+
+
+```
+
+#### Stats on figure 1b
+```{r, echo=FALSE}
+
+#creating 2 data frames
+viables_a<- viables %>% filter(Antibiotic=="azi")
+viables_c<-viables %>% filter(Antibiotic=="col")
+viables_a$name <- paste(viables_a$Strain, "_", viables_a$Concentration)
+viables_c$name <- paste(viables_c$Strain, "_", viables_c$Concentration)
+
+#test for normality
+shapiro.test(viables_a$viable_cells)
+shapiro.test(viables_c$viable_cells)
+
+##Stats_wilcox
+#AZI
+wilcox.test(x=viables_a$viable_cells[viables_a$name=="J53 _ 1"],viables_a$viable_cells[viables_a$name=="pOXA-48WT _ 1"])
+wilcox.test(x=viables_a$viable_cells[viables_a$name=="J53 _ 1"],viables_a$viable_cells[viables_a$name=="pOXA-48DEL _ 1"])
+
+wilcox.test(x=viables_a$viable_cells[viables_a$name=="J53 _ 2"],viables_a$viable_cells[viables_a$name=="pOXA-48WT _ 2"])
+wilcox.test(x=viables_a$viable_cells[viables_a$name=="J53 _ 2"],viables_a$viable_cells[viables_a$name=="pOXA-48DEL _ 2"])
+
+wilcox.test(x=viables_a$viable_cells[viables_a$name=="J53 _ 4"],viables_a$viable_cells[viables_a$name=="pOXA-48WT _ 4"])
+wilcox.test(x=viables_a$viable_cells[viables_a$name=="J53 _ 4"],viables_a$viable_cells[viables_a$name=="pOXA-48DEL _ 4"])
+
+#COL
+wilcox.test(x=viables_c$viable_cells[viables_c$name=="J53 _ 1"],viables_c$viable_cells[viables_c$name=="pOXA-48WT _ 1"])
+wilcox.test(x=viables_c$viable_cells[viables_c$name=="J53 _ 1"],viables_c$viable_cells[viables_c$name=="pOXA-48DEL _ 1"])
+
+wilcox.test(x=viables_c$viable_cells[viables_c$name=="J53 _ 2"],viables_c$viable_cells[viables_c$name=="pOXA-48WT _ 2"])
+wilcox.test(x=viables_c$viable_cells[viables_c$name=="J53 _ 2"],viables_c$viable_cells[viables_c$name=="pOXA-48DEL _ 2"])
+
+wilcox.test(x=viables_c$viable_cells[viables_c$name=="J53 _ 4"],viables_c$viable_cells[viables_c$name=="pOXA-48WT _ 4"])
+wilcox.test(x=viables_c$viable_cells[viables_c$name=="J53 _ 4"],viables_c$viable_cells[viables_c$name=="pOXA-48DEL _ 4"])
+```
+
+## Figure 2
+### Figure 2b
+```{r}
+
+#loading data
+mics_poxa_pun <- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="MIC Data") %>% filter(Figure=="Figure2") 
+
+#calculating median values
+mics_medias <- mics_poxa_pun %>% 
+  group_by(Antibiotic, Original_name) %>% 
+  mutate(mediana=median(MIC, na.rm = T)) %>% 
+  mutate(media=mean(MIC,na.rm = T))
+
+#plot azi
+azi_plot<-mics_medias %>% 
+  filter(Antibiotic=="AZI") %>% 
+ mutate(Original_name=factor(Original_name, levels=c("J53", "pOXA-48DEL", "pOXA-48WT", "TcpOXA-48pBAD-tet", "J53_pun_vacio", "J53_pun_pOXA-48DEL","J53_pun_OXA48"))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y=mediana,
+                   x=Original_name, 
+                   color=blaR, fill=blaR), 
+               alpha=0.2, position=position_dodge(width=0.9), outlier.shape = NA)+
+  geom_jitter(aes(y=MIC,
+                  x=Original_name, 
+                  color=blaR, fill=blaR), alpha=.15, width=.1, height = .1, size=2)+
+  scale_y_continuous(trans = scales::log2_trans())+
+  theme_bw()+
+  theme(legend.position="none",
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45,  hjust=1), 
+        aspect.ratio=1)+
+  scale_fill_manual(values= c("darkred", "darkblue")) +
+  scale_color_manual(values= c("darkred", "darkblue")) +
+  labs(title="AZI", y="MIC", x="")
+
+
+#plot col
+col_plot<-mics_medias %>% 
+  filter(Antibiotic=="COL") %>% 
+  mutate(Original_name=factor(Original_name, levels=c("J53", "pOXA-48DEL", "pOXA-48WT", "TcpOXA-48pBAD-tet", "J53_pun_vacio", "J53_pun_pOXA-48DEL","J53_pun_OXA48"))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y=mediana,
+                   x=Original_name, 
+                   color=blaR, fill=blaR), 
+               alpha=0.2, position=position_dodge(width=0.9), outlier.shape = NA)+
+  geom_jitter(aes(y=MIC,
+                  x=Original_name, 
+                  color=blaR, fill=blaR), alpha=.15, width=.1, height = .1, size=2)+
+  scale_y_continuous(trans = scales::log2_trans())+
+  theme_bw()+
+  theme(legend.position="none",
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45,  hjust=1), 
+        aspect.ratio=1)+
+  scale_fill_manual(values= c("darkred", "darkblue")) +
+  scale_color_manual(values= c("darkred", "darkblue")) +
+  labs(title="COL", y="MIC", x="")
+
+
+
+#plot amc
+amc_plot<-mics_medias %>% 
+  filter(Antibiotic=="AMC") %>% 
+ mutate(Original_name=factor(Original_name, levels=c("J53", "pOXA-48DEL", "pOXA-48WT", "TcpOXA-48pBAD-tet", "J53_pun_vacio", "J53_pun_pOXA-48DEL","J53_pun_OXA48"))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y=mediana,
+                   x=Original_name, 
+                   color=blaR, fill=blaR), 
+               alpha=0.2, position=position_dodge(width=0.9), outlier.shape = NA)+
+  geom_jitter(aes(y=MIC,
+                  x=Original_name, 
+                  color=blaR, fill=blaR), alpha=.15, width=.1, height = .1, size=2)+
+  scale_y_continuous(trans = scales::log2_trans())+
+  theme_bw()+
+  theme(legend.position="none",
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45,  hjust=1), 
+        aspect.ratio=1)+
+  scale_fill_manual(values= c("darkred", "darkblue")) +
+  scale_color_manual(values= c("darkred", "darkblue")) +
+  labs(title="AMC", y="MIC", x="")
+
+
+#plot ert
+ert_plot<-mics_medias %>% 
+  filter(Antibiotic=="ERT") %>% 
+  mutate(Original_name=factor(Original_name, levels=c("J53", "pOXA-48DEL", "pOXA-48WT", "TcpOXA-48pBAD-tet", "J53_pun_vacio", "J53_pun_pOXA-48DEL","J53_pun_OXA48"))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y=mediana,
+                   x=Original_name, 
+                   color=blaR, fill=blaR), 
+               alpha=0.2, position=position_dodge(width=0.9), outlier.shape = NA)+
+  geom_jitter(aes(y=MIC,
+                  x=Original_name, 
+                  color=blaR, fill=blaR), alpha=.15, width=.1, height = .1, size=2)+
+  scale_y_continuous(trans = scales::log2_trans())+
+  theme_bw()+
+  theme(legend.position="none",
+        strip.background = element_blank(),
+        panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45,  hjust=1), 
+        aspect.ratio=1)+
+  scale_fill_manual(values= c("darkred", "darkblue")) +
+  scale_color_manual(values= c("darkred", "darkblue")) +
+  labs(title="ERT", y="MIC", x="")
+
+
+# Plot them all!
+ggarrange( amc_plot, ert_plot, col_plot,azi_plot)
+
+
+```
+#### Stats on figure 2b
+```{r, echo=FALSE}
+#Create tables per antibiotic
+datos_AZI<-mics_medias %>% filter(Antibiotic=="AZI")
+datos_COL<-mics_medias %>% filter(Antibiotic=="COL")
+datos_ERT<-mics_medias %>% filter(Antibiotic=="ERT")
+datos_AMC<-mics_medias %>% filter(Antibiotic=="AMC")
+
+#test Normality (Shapiro)
+shapiro.test(datos_AZI$mediana)
+shapiro.test(datos_COL$mediana)
+shapiro.test(datos_AMC$mediana)
+shapiro.test(datos_ERT$mediana)
+
+
+#AZI
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48DEL"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48WT"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="J53_pun_vacio"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="J53_pun_OXA48"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="J53_pun_pOXA-48DEL"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="TcpOXA-48pBAD-tet"],datos_AZI$MIC[datos_AZI$Original_name=="J53"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="J53_pun_OXA48"],datos_AZI$MIC[datos_AZI$Original_name=="J53_pun_vacio"])
+wilcox.test(x=datos_AZI$MIC[datos_AZI$Original_name=="J53_pun_OXA48"],datos_AZI$MIC[datos_AZI$Original_name=="pOXA-48WT"])
+
+#COL
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48DEL"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="pOXA-48WT"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="J53_pun_vacio"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="J53_pun_OXA48"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="J53_pun_pOXA-48DEL"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="TcpOXA-48pBAD-tet"],datos_COL$MIC[datos_COL$Original_name=="J53"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="J53_pun_OXA48"],datos_COL$MIC[datos_COL$Original_name=="J53_pun_vacio"])
+wilcox.test(x=datos_COL$MIC[datos_COL$Original_name=="J53_pun_OXA48"],datos_COL$MIC[datos_COL$Original_name=="pOXA-48WT"])
+
+#ERT
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48DEL"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48WT"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="J53_pun_vacio"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="J53_pun_OXA48"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="J53_pun_pOXA-48DEL"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="TcpOXA-48pBAD-tet"],datos_ERT$MIC[datos_ERT$Original_name=="J53"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="J53_pun_OXA48"],datos_ERT$MIC[datos_ERT$Original_name=="J53_pun_vacio"])
+wilcox.test(x=datos_ERT$MIC[datos_ERT$Original_name=="J53_pun_OXA48"],datos_ERT$MIC[datos_ERT$Original_name=="pOXA-48WT"])
+
+#AMC
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48DEL"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48WT"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="J53_pun_vacio"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="J53_pun_OXA48"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="J53_pun_pOXA-48DEL"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="TcpOXA-48pBAD-tet"],datos_AMC$MIC[datos_AMC$Original_name=="J53"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="J53_pun_OXA48"],datos_AMC$MIC[datos_AMC$Original_name=="J53_pun_vacio"])
+wilcox.test(x=datos_AMC$MIC[datos_AMC$Original_name=="J53_pun_OXA48"],datos_AMC$MIC[datos_AMC$Original_name=="pOXA-48WT"])
+
+```
+
+## Figure 3
+####  Stats on Figure 3b
+```{r, echo=FALSE}
+
+mics_heatmap<- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="MIC Data") %>%  filter(Figure=="Figure3")
+
+mics_heatmap_summarised <- mics_heatmap %>% 
+  group_by(Antibiotic, Original_name) %>% 
+  summarise(MIC=median(MIC, na.rm = T))
+
+pBAD_vacio <- mics_heatmap_summarised %>% filter(Original_name == "pBAD18") %>% 
+  rename(pBAD18 = MIC)
+
+mics_heatmap_summarised <- mics_heatmap_summarised %>% left_join(pBAD_vacio, by = c("Antibiotic"))  
+
+mics_heatmap_summarised <- mics_heatmap_summarised %>% 
+  mutate(Original_name=Original_name.x) %>% 
+  select(-Original_name.y, -Original_name.x) %>% 
+  mutate(FC = MIC/pBAD18) %>% 
+  mutate(log2FC = log2(FC)) 
+
+# ANOVA and post-hoc Dunnet analysis
+Anova_table <- mics_heatmap %>% 
+  group_by(Antibiotic) %>% 
+  do(tidy(aov(MIC ~ Original_name, data=.)))
+
+set.seed(0.6346985)
+###Dunnett compared to pBAD18 empty
+dunnet_test<- mics_heatmap %>%
+  split(.$Antibiotic) %>%
+  map(~DunnettTest(x = .x$MIC, g = .x$Original_name, control="pBAD18")) 
+
+###Create a table with dunnett results
+tab.dunnet_test <- lapply(dunnet_test, function (x) as.data.frame(x[]))
+df.dunnet_test <- as.data.frame(do.call(rbind, tab.dunnet_test))
+df_row.dunnet_test <- strsplit(row.names(df.dunnet_test), split = ".", fixed = T)
+df_row2.dunnet_test <- sapply(df_row.dunnet_test, function (x) x[1])
+dunnet_test_all_abs <- data.frame(df.dunnet_test, df_row2.dunnet_test)
+colnames(dunnet_test_all_abs)[5] <- "Antibiotic"
+dunnet_test_all_abs$Contrast<-row.names(dunnet_test_all_abs) 
+dunnet_test_all_abs<- dunnet_test_all_abs %>% separate(Contrast, into=c("Antibiotic", "Strain"), remove = F)
+
+# write.table(dunnet_test_all_abs, file="Dunnett_dunnet_test_all_abs.txt", sep = "\t", row.names = T, quote = F, col.names = NA)
+
+# Mix stats and mic values
+mics_and_stats<- left_join(mics_heatmap_summarised, dunnet_test_all_abs, by=c("Antibiotic"="Antibiotic", "Original_name"="Strain"))
+
+mics_and_stats$Antibiotic <- 
+  factor(mics_and_stats$Antibiotic, levels= c("AZI", "COL", "CHL", "FOS", "CIP", "RIF", "TMP", "TET",  "ERT", "MER", "IMP", "AZM", "AMC", "CTX")) 
+
+mics_and_stats<- mics_and_stats %>% 
+  mutate(signficant=case_when(pBAD18.pval<0.05 ~ "P<0.05",
+                                       pBAD18.pval<0.1 & pBAD18.pval>0.05  ~ "P<0.10", 
+                                       TRUE ~ "N.S."))
+```
+
+### Figure 3b
+```{r}
+
+#Color palette
+WhiteBlueBlue<-colorpanel(61,"darkblue", "white")
+
+#heatmap
+#Collateral Sensitivity
+
+#This plot is made in two steps. First we plot the CS responses
+mics_and_stats %>% 
+  filter(Original_name!="pBAD18") %>% 
+  filter(Original_name!="BW25113") %>% 
+  ggplot(aes(x = fct_relevel(Original_name,"CTXM14","CTXM15", "TEM1", "OXA1","NDM1","KPC2","OXA48"),
+             y = Antibiotic, 
+             fill = log2FC,
+  )) + 
+  geom_tile() +
+  geom_tile(data=mics_and_stats %>%
+              filter(pBAD18.pval<0.05) %>% 
+              filter(Original_name!="pBAD18") %>% 
+              filter(Original_name!="BW25113"),
+              aes(x = fct_relevel(Original_name,"CTXM14","CTXM15", "TEM1", "OXA1","NDM1","KPC2","OXA48"),
+                y =Antibiotic
+            ), color="Black")+
+  
+  theme_bw() +
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(), 
+        aspect.ratio = 1, 
+        strip.background = element_blank(),
+        axis.text.x = element_text(angle = 45,  hjust=1)) +
+  scale_fill_gradientn(colors=WhiteBlueBlue,
+                       na.value = "white",
+                       name = "",
+                       limits = c(-1, 0), breaks =  c(0, -0.4150374992788438, -1), labels=paste0(2^c(0, -0.4150374992788438, -1), "x")) +
+
+  labs(x = "", y ="")
+
+
+##This plot is made in two steps. Second we plot the Resistance
+WhiteRedred<-colorpanel(6, "#f5e6e6ff", "darkred")
+
+mics_and_stats %>%
+  filter(Original_name!="pBAD18") %>% 
+  filter(Original_name!="BW25113") %>% 
+  ggplot(aes(x = fct_relevel(Original_name,"CTXM14","CTXM15", "TEM1", "OXA1","NDM1","KPC2","OXA48"), y = Antibiotic, fill = log2FC)) + 
+  geom_tile() +
+  geom_tile(data=mics_and_stats %>%
+              filter(pBAD18.pval<0.05) %>% 
+              filter(Original_name!="pBAD18") %>% 
+              filter(Original_name!="BW25113"),
+            aes(x = fct_relevel(Original_name,"CTXM14","CTXM15", "TEM1", "OXA1","NDM1","KPC2","OXA48"),
+                y =Antibiotic
+            ), color="Black")+
+  theme_bw() +
+  scale_fill_gradient2(low = "cyan", high = "darkred", mid = "white") +
+  theme(panel.background = element_blank(), panel.grid = element_blank(), 
+        aspect.ratio = 1, 
+        strip.background = element_blank(),
+        axis.text.x = element_text(angle = 45,  hjust=1)) +
+  scale_fill_gradientn(colors=WhiteRedred,
+                       na.value = "white",
+                       name = "",
+                       limits = c(1, 12), breaks =  seq(2, 12, 2), labels=paste0(2^seq(2,12,by=2),"x"))+
+  labs(x = "", y ="") 
+
+```
+
+## Figure 4
+### Figure 4b
+```{r}
+#######Fig4b####
+EcoR_pun_long_c <- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="MIC Data") %>% filter(Figure=="Figure4")
+
+#AZI
+EcoR_pun_long_c <- EcoR_pun_long_c %>% 
+  filter(Original_name=="pUN") %>% 
+  filter(Strain!="J53") %>% 
+  group_by(Strain, Antibiotic) %>% 
+  summarise(controlMIC=median(MIC)) %>% 
+  left_join(EcoR_pun_long_c) %>% 
+  mutate(NormMIC=MIC/controlMIC) %>% 
+  mutate(log2normMIC=log2(NormMIC)) %>% 
+  ungroup() %>% 
+  group_by(Original_name,Antibiotic, Strain) %>% 
+  mutate(medianMIC=median(NormMIC)) %>% 
+  mutate(log2medianMIC=log2(medianMIC)) 
+  
+  log2_azi_plot<-EcoR_pun_long_c %>% 
+  filter(Antibiotic=="AZI") %>%
+  filter(Original_name!="empty" & Original_name!="pUN") %>% 
+  ggplot()+
+  geom_jitter(aes(y=log2normMIC,x=Strain), color="#619cff",alpha=0.4, width=.1, height = .1)+
+  #geom_boxplot(aes(y=NormMIC,x=cepa, color=cepa),alpha=.7, width=.3, height = .1)+
+  geom_hline(yintercept=0)+
+  geom_point(aes(y=log2medianMIC, x=Strain), color="black", size=2.5)+
+  facet_wrap(~Original_name, ncol = 1)+ 
+  theme_bw()+ 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        axis.text.x = element_text(angle = 45, hjust=1))+
+  theme(legend.position="none")+
+  labs(title="AZI")
+
+
+
+#COL
+log2_col_plot<-EcoR_pun_long_c %>% 
+  filter(Antibiotic=="COL") %>%
+  filter(Original_name!="empty" & Original_name!="pUN") %>% 
+  ggplot()+
+  geom_jitter(aes(y=log2normMIC,x=Strain), color="#619cff",alpha=0.4, width=.1, height = .1)+
+  #geom_boxplot(aes(y=NormMIC,x=cepa, color=cepa),alpha=.7, width=.3, height = .1)+
+  geom_point(aes(y=log2medianMIC, x=Strain), color="black", size=2.5)+
+  geom_hline(yintercept=0)+
+  scale_y_continuous(limits = c(-3,1), breaks = c(-3,-2,-1,0,1))+
+  facet_wrap(~Original_name, ncol = 1)+ 
+  theme_bw()+ 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        axis.text.x = element_text(angle = 45, hjust=1))+
+  theme(legend.position="none")+
+  labs(title="COL")
+
+ggarrange(log2_azi_plot, log2_col_plot, nrow=1)
+
+```
+### Stats on figure 4b
+```{r, echo=FALSE}
+
+a_wide<- EcoR_pun_long_c %>% 
+  select(Strain, Antibiotic, replica, Original_name, MIC) %>% 
+  pivot_wider(names_from = c(Strain,Antibiotic, Original_name), values_from = MIC)
+
+wilcox.test(a_wide$ECOR01_AZI_pUN, a_wide$ECOR01_AZI_OXA48)
+wilcox.test (a_wide$ECOR27_AZI_pUN, a_wide$ECOR27_AZI_OXA48)
+wilcox.test (a_wide$ECOR35_AZI_pUN, a_wide$ECOR35_AZI_OXA48)
+wilcox.test (a_wide$ECOR42_AZI_pUN, a_wide$ECOR42_AZI_OXA48)
+wilcox.test (a_wide$ECOR47_AZI_pUN, a_wide$ECOR47_AZI_OXA48)
+wilcox.test (a_wide$ECOR49_AZI_pUN, a_wide$ECOR49_AZI_OXA48)
+wilcox.test (a_wide$ECOR53_AZI_pUN, a_wide$ECOR53_AZI_OXA48)
+wilcox.test (a_wide$ECOR61_AZI_pUN, a_wide$ECOR61_AZI_OXA48)
+wilcox.test (a_wide$ECOR70_AZI_pUN, a_wide$ECOR70_AZI_OXA48)
+
+wilcox.test (a_wide$ECOR01_AZI_pUN, a_wide$ECOR01_AZI_CTXM15)
+wilcox.test (a_wide$ECOR27_AZI_pUN, a_wide$ECOR27_AZI_CTXM15)
+wilcox.test (a_wide$ECOR35_AZI_pUN, a_wide$ECOR35_AZI_CTXM15)
+wilcox.test (a_wide$ECOR42_AZI_pUN, a_wide$ECOR42_AZI_CTXM15)
+wilcox.test (a_wide$ECOR47_AZI_pUN, a_wide$ECOR47_AZI_CTXM15)
+wilcox.test (a_wide$ECOR49_AZI_pUN, a_wide$ECOR49_AZI_CTXM15)
+wilcox.test (a_wide$ECOR53_AZI_pUN, a_wide$ECOR53_AZI_CTXM15)
+wilcox.test (a_wide$ECOR61_AZI_pUN, a_wide$ECOR61_AZI_CTXM15)
+wilcox.test (a_wide$ECOR70_AZI_pUN, a_wide$ECOR70_AZI_CTXM15)
+
+wilcox.test (a_wide$ECOR01_COL_pUN, a_wide$ECOR01_COL_OXA48)
+wilcox.test (a_wide$ECOR27_COL_pUN, a_wide$ECOR27_COL_OXA48)
+wilcox.test (a_wide$ECOR35_COL_pUN, a_wide$ECOR35_COL_OXA48)
+wilcox.test (a_wide$ECOR42_COL_pUN, a_wide$ECOR42_COL_OXA48)
+
+wilcox.test (a_wide$ECOR47_COL_pUN, a_wide$ECOR47_COL_OXA48)
+wilcox.test (a_wide$ECOR49_COL_pUN, a_wide$ECOR49_COL_OXA48)
+wilcox.test (a_wide$ECOR53_COL_pUN, a_wide$ECOR53_COL_OXA48)
+wilcox.test (a_wide$ECOR61_COL_pUN, a_wide$ECOR61_COL_OXA48)
+wilcox.test (a_wide$ECOR70_COL_pUN, a_wide$ECOR70_COL_OXA48)
+
+wilcox.test (a_wide$ECOR01_COL_pUN, a_wide$ECOR01_COL_CTXM15)
+wilcox.test (a_wide$ECOR27_COL_pUN, a_wide$ECOR27_COL_CTXM15)
+wilcox.test (a_wide$ECOR35_COL_pUN, a_wide$ECOR35_COL_CTXM15)
+wilcox.test (a_wide$ECOR42_COL_pUN, a_wide$ECOR42_COL_CTXM15)
+wilcox.test (a_wide$ECOR47_COL_pUN, a_wide$ECOR47_COL_CTXM15)
+wilcox.test (a_wide$ECOR49_COL_pUN, a_wide$ECOR49_COL_CTXM15)
+wilcox.test (a_wide$ECOR53_COL_pUN, a_wide$ECOR53_COL_CTXM15)
+wilcox.test (a_wide$ECOR61_COL_pUN, a_wide$ECOR61_COL_CTXM15)
+wilcox.test (a_wide$ECOR70_COL_pUN, a_wide$ECOR70_COL_CTXM15)
+
+```
+## Figure 5
+
+### Loading and handling data
+```{r}
+# ATLAS MIC Data
+  # ATLAS data downloaded from the following dataset (https://s3-eu-west-1.amazonaws.com/amr-prototype-data/Open+Atlas_Reuse_Data.xls) 
+  # originally published in Catalán et. al (doi: 10.1038/s41467-022-30635-7)
+
+ATLAS<-readxl::read_xlsx("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Atlas_Reuse_Data.xlsx")
+
+# Antibiotic groups
+Antibiotic_fam<-read.delim("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Much_clearer_now/antibiotic_groups")
+
+# Reformat ATLAS data (including updating bacterial nomenclature)
+ATLAS<-ATLAS[5:dim(ATLAS)[1],]
+colnames(ATLAS)<-ATLAS[1,]
+ATLAS<-ATLAS[2:dim(ATLAS)[1],]
+ATLAS_good<-ATLAS %>% 
+  pivot_longer(names_to = "Variable", values_to = "Value", -c(`Isolate Id`:Phenotype)) %>% 
+  filter(!is.na(Value)) %>% 
+  mutate(Species=case_when( Species== "Enterobacter aerogenes" ~ "Klebsiella aerogenes", 
+                            Species == "Klebsiella (Enterobacter) aerogenes" ~ "Klebsiella aerogenes",
+                             TRUE ~ Species))
+
+
+# Load a key to ensure MIC values are numeric
+Key_MICs<-read.table("~/Science/MEGA/Scientific Projects/IRYCIS/CS/PabloCatalan-atlas-ded3290/data/key_MIC_values_ALT.txt")
+colnames(Key_MICs)<- c("Value", "MICs_transformed", "Log2_MIC") 
+ATLAS_good<-ATLAS_good %>% left_join(Key_MICs)
+ATLAS_good<-ATLAS_good[grepl("_I", ATLAS_good$Variable)==F,]
+
+
+```
+
+### Preparing data for Figure 5
+
+```{r}
+
+# load experimental dataset (sheet 1 on Source Data file) and rearrange it to wide format
+mics_completo<- read.csv("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Refereees/mics_completo2.csv") 
+mics_wide<- mics_completo %>% pivot_wider(names_from = Antibiotic, values_from = MIC)
+
+# Arrange data
+#Experimental: 
+experimental_data<- mics_completo %>% mutate(Log2MIC=log2(MIC)) %>% 
+  select(-MIC) %>% 
+  pivot_wider(names_from = Antibiotic, values_from = Log2MIC) %>%
+  rename(IMI=IMP, COL_E=COL, AZI_E=AZI) %>% 
+  select(AZI_E, COL_E, CTX, AMC,ERT, MER, IMI, AZM) %>% 
+  mutate(data="Experimental")
+
+#ATLAS
+ATLAS_Corr_Coli<- ATLAS_good %>%
+  left_join(Antibiotic_fam, by=c("Variable"="Antibiotic")) %>%
+  mutate(Variable=Short) %>%
+  rename(Isolate=`Isolate Id`) %>%
+  filter(Species=="Escherichia coli") %>% 
+  group_by(Isolate, Variable) %>%
+  summarise(Log2_MIC=max(Log2_MIC, na.rm=T)) %>% 
+  pivot_wider(names_from = Variable, values_from = Log2_MIC,   values_fill = NA) %>%
+  column_to_rownames("Isolate") %>% 
+  mutate(data="ATLAS")
+
+# Join experimental and ATLAS data
+ATLAS_Corr_Mixed <- full_join(ATLAS_Corr_Coli, experimental_data) %>% select(-data)
+
+
+```
+### Figure 5a
+```{r}
+#Bonferroni adjusted cor matrix for al pairwise Spearman correlations
+Corr<-corr.test(ATLAS_Corr_Mixed,use="pairwise", method = "spe", adjust = "bonf")
+
+#Data wrangling
+Correlation_matrix <- Corr$r
+Correlation_matrix[abs(Correlation_matrix)<0.1]<-0
+Correlation_pval <- Corr$p
+Correlation_pval[abs(Correlation_matrix)<0.1]<-1
+Correlation_n <- Corr$n
+Correlation_matrix[Correlation_n<50]<-0
+Correlation_pval[Correlation_n<50]<-1
+
+M_long <- as.data.frame(Correlation_matrix) %>% 
+  rownames_to_column("Antibiotic1") %>%  
+  pivot_longer(cols=AMC:COL_E, values_to = "rho", names_to = "Antibiotic2") %>% 
+  left_join(as.data.frame(Correlation_pval) %>% rownames_to_column("Antibiotic1") %>%  
+              pivot_longer(cols=AMC:COL_E, values_to = "P", names_to = "Antibiotic2")
+  )
+
+#Selects fancy colors for significant, negative correlations
+M_long_filtered <- M_long %>% filter(P<0.05, rho<0) %>% 
+  filter(Antibiotic1=="COL_E" | Antibiotic1=="COLP80" | Antibiotic1=="AZI_E") %>% 
+  mutate(col=case_when(Antibiotic1 == "COLP80" ~ "#071952", 
+                       Antibiotic1=="COL_E" ~ "#2268AD", 
+                       Antibiotic1 =="AZI_E" ~"#6eadacff" )) 
+
+# Order factor
+order<-c("ERT", "IMI", "MER", "DOR","AMC","CTX", "AZM", "COLP80", "COL_E", "AZI_E")
+
+# The ACTUAL plotting
+circos.clear()
+circos.par(gap.after = c("COLP80"=20, "COL_E"=3, "AZI_E"=20, "AMC"=3, "CTX"=3, "AZM"=20, "ERT"=3, "IMI"=3, "MER"=3, "DOR"=3))
+
+chordDiagram((M_long_filtered %>% select(-P, -col)), 
+             col = M_long_filtered$col, 
+             transparency = 1-(abs(M_long_filtered$rho)), 
+             order = order, 
+             grid.col = c("COLP80"="#071952", "COL_E"="#2268AD", "AZI_E"="#6eadacff",
+                          "AMC"="grey80", "CTX"="grey80", "AZM"="grey80", "ERT"="grey80", "IMI"="grey80", "MER"="grey80", "DOR"="grey80"),
+             # grid.col = "grey", 
+             symmetric = T, 
+             scale=T, 
+             annotationTrack = c("name", "grid"),
+             big.gap = 30
+             #     annotationTrackHeight = c(0.03, 0.01)
+)
+
+circos.clear()
+
+```
+
+### Figure 5b
+```{r}
+    
+#For each antibiotic, perform a correlation test, and then plot the MIC
+imi.test<-cor.test(ATLAS_Corr_Coli$IMI, ATLAS_Corr_Coli$COLP80, method="spe")
+Imi<- ATLAS_Corr_Coli %>% 
+  ggplot(aes(IMI, COLP80))+
+  geom_jitter( alpha=.2, width = 0.35, height = .35, color="#071952", size=.1) + 
+  geom_smooth(method = "lm",  fullrange=T, color="red", alpha=.2, lty=3)+
+  annotate("text", x=1.5, y=2.5,label=paste0("rho= ", round(imi.test$estimate, 2)))+
+  scale_x_continuous(limits = c(-5.5,5.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  scale_y_continuous(limits = c(-6.5, 2.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  theme_bw()+
+  theme(panel.background = element_blank(), panel.grid = element_blank(), aspect.ratio = 1, axis.text.x = element_text(angle=45, hjust=1))+
+  labs(y="Colistin MIC (mg/L)", y="Imipenem MIC (mg/L)")
+
+dori.test<-cor.test(ATLAS_Corr_Coli$DOR, ATLAS_Corr_Coli$COLP80, method="spe")
+Dori<- ATLAS_Corr_Coli %>% 
+  ggplot(aes(DOR, COLP80))+
+  geom_jitter(aes(DOR, COLP80), alpha=.2, width = 0.35, height = .35, size=.1, color="#071952") + 
+  geom_smooth(method = "lm",  fullrange=T, color="red", alpha=.2, lty=3)+
+  annotate("text", x=0.5, y=2.5,label=paste0("rho= ", round(dori.test$estimate, 2)))+
+  scale_x_continuous(limits = c(-7.5,2.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  scale_y_continuous(limits = c(-6.5, 2.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  theme_bw()+
+  theme(panel.background = element_blank(), panel.grid = element_blank(), aspect.ratio = 1, axis.text.x = element_text(angle=45, hjust=1), legend.position = "none")+
+  labs(y="Colistin MIC (mg/L)", y="Doripenem MIC (mg/L)")
+
+mero.test<-cor.test(ATLAS_Corr_Coli$MER, ATLAS_Corr_Coli$COLP80, method="spe")
+Mero<- ATLAS_Corr_Coli %>% 
+  ggplot(aes(MER, COLP80))+
+  geom_jitter( alpha=.2, width = 0.35, height = .35, color="#071952", size=.1) + 
+  geom_smooth(method = "lm",  fullrange=T, color="red", alpha=.2, lty=3)+
+  annotate("text", x=1.5, y=2.5,label=paste0("rho= ", round(mero.test$estimate, 2)))+
+  scale_x_continuous(limits = c(-7.5,4.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  scale_y_continuous(limits = c(-6.5, 2.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  theme_bw()+
+  theme(panel.background = element_blank(), panel.grid = element_blank(), aspect.ratio = 1, axis.text.x = element_text(angle=45, hjust=1))+
+  labs(y="Colistin MIC (mg/L)", y="Meropenem MIC (mg/L)")
+
+ggarrange(Imi, Dori, Mero, ncol=3, vjust=25, align="v")
+
+```
+
+### Figure 5c
+```{r}
+     
+# Select 50 most abundant species in ATLAS
+Species_selected<-ATLAS_good %>%
+  rename(Isolate=`Isolate Id`) %>% 
+  filter(`Organism Group`=="Enterobacteriaceae") %>% 
+  group_by(Species) %>% 
+  summarise(N=n()) %>% 
+  top_n(50, N) %>% arrange(desc(N))
+
+# Prepare and execute a loop that performs pairwise correlations
+# for all antibiotics for all enterobacterial spp.
+species=NULL
+plot=0
+par(mfrow=c(2,2))
+columns<-c("Antibiotic", "Species",  "Antibiotic_2", "Corr", "P", "N" )
+CorrAll.def<- data.frame(matrix(nrow = 0, ncol = length(columns))) 
+colnames(CorrAll.def) = columns
+
+# loop that calculates all Antibiotic pair correlation for each enterobacterial spp. 
+
+for (species in Species_selected$Species){
+  ATLAS_Corr<- ATLAS_good %>%
+    left_join(Antibiotic_fam, by=c("Variable"="Antibiotic")) %>%
+    mutate(Variable=Short) %>%
+    rename(Isolate=`Isolate Id`) %>%
+    filter(Species==species) %>% 
+    group_by(Isolate, Variable) %>%
+    summarise(Log2_MIC=max(Log2_MIC, na.rm=T)) %>% 
+    pivot_wider(names_from = Variable, values_from = Log2_MIC,   values_fill = NA) %>%
+    column_to_rownames("Isolate")  
+  
+  Corr<-corr.test(ATLAS_Corr,use="pairwise", method = "spe", adjust = "none")
+  
+  M <- Corr$r
+  M[abs(M)<0.1]<-0
+  testRes <- Corr$p
+  testRes[abs(M)<0.1]<-1
+  counts <- Corr$n
+  
+  Corr.M.tmp <- as.data.frame(M) %>%
+    rownames_to_column("Antibiotic") %>% 
+    mutate(Species=species) 
+  
+  Corr.M.tmp <-Corr.M.tmp %>%
+    pivot_longer(cols=colnames(Corr.M.tmp[2:(ncol(Corr.M.tmp)-1)]), names_to = "Antibiotic_2", values_to = "Corr")
+  
+  p.tesRes.tmp <-as.data.frame(testRes) %>%
+    rownames_to_column("Antibiotic") %>% 
+    mutate(Species=species) 
+  
+  p.tesRes.tmp <- p.tesRes.tmp %>%
+    pivot_longer(cols=colnames(p.tesRes.tmp[2:(ncol(p.tesRes.tmp)-1)]), names_to = "Antibiotic_2", values_to = "P")
+  
+  p.counts.tmp <-as.data.frame(counts) %>%
+    rownames_to_column("Antibiotic") %>% 
+    mutate(Species=species) 
+  
+  p.counts.tmp <-p.counts.tmp %>%
+    pivot_longer(cols=colnames(p.counts.tmp[2:(ncol(p.counts.tmp)-1)]), names_to = "Antibiotic_2", values_to = "N")
+  
+  cosa.tmp <-left_join(Corr.M.tmp, p.tesRes.tmp) %>% left_join(p.counts.tmp)
+  CorrAll.def <- rbind(CorrAll.def, cosa.tmp) 
+}
+
+# Load  and add a key to short spp. names and antibiotic families
+CorrAll<- CorrAll.def %>% 
+  left_join(Antibiotic_fam %>% rename("Antibiotic_long"="Antibiotic"), by=c("Antibiotic_2"="Short"))
+spp_short<-read.csv("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Spp.csv" )
+CorrAll<- CorrAll %>% left_join(spp_short) %>% mutate(Species=Short) %>% select(-Short)
+
+# Filter correlations with COL or COLP80
+CorrAll <-CorrAll %>% 
+  filter(Antibiotic=="COL"| Antibiotic=="COLP80" ) %>%
+  filter(Antibiotic_2!="COL", Antibiotic_2!="COLP80") %>%
+  filter(P<0.05, Corr<0, N>50) %>%
+  filter(Group=="Beta-lactam")
+
+Cor_p80<- CorrAll %>% 
+  filter(Antibiotic=="COLP80") %>%  
+  filter(Antibiotic_2!="MIN") %>% 
+  mutate(cor2=case_when(P>0.05~0, Corr>0~0,is.na(Corr)~0, T~Corr)) %>% 
+  filter(P<0.05) %>%
+  filter(Corr<0) %>%
+  mutate(ab="COLP80")
+
+Cor_col<- CorrAll %>% 
+  filter(Antibiotic=="COL") %>% 
+  filter(Antibiotic_2!="TIG") %>% 
+  filter(Antibiotic_2!="AMK") %>% 
+  filter(Antibiotic_2!="MIN") %>% 
+  mutate(cor2=case_when(P>0.05~0, Corr>0~0,is.na(Corr)~0, T~Corr)) %>% 
+  filter(P<0.05) %>%
+  filter(Corr<0) %>%
+  mutate(ab="COL")
+
+cor_total<-rbind(Cor_p80, Cor_col)
+
+#Prepare plotting
+library(pheatmap)
+heatmap2<- cor_total  %>% 
+  select(Species, Antibiotic_2, cor2) %>% 
+  pivot_wider(names_from = Antibiotic_2, values_from = cor2)
+heatmap2[is.na(heatmap2)] <- 0
+heatmap2 <-heatmap2 %>% column_to_rownames("Species") %>%
+  relocate(any_of(c("MER", "DOR", "IMI","AMC", "AMP",  "AZM","PIP+TAZ","AZM+AVI",   "CTO+AVI","CAZ+AVI"))) 
+
+#Nice colors
+color <- colorRampPalette((c( "#071952","white")))(10)
+
+#Italics for Spp. names
+newnames <- lapply(
+  rownames(heatmap2),
+  function(x) bquote(italic(.(x))))
+
+#Do the actual plotting
+pheatmap(t(heatmap2), color=color,cluster_cols = T, border_color = "grey", number_color = "black",
+         fontsize_number = 9, 
+         column_names_side = "top",
+         treeheight_row=10, 
+         treeheight_col=10,
+         angle_col = c("45"), 
+         cellwidth = 15,
+         cellheight = 15, 
+         labels_col = as.expression(newnames))
+
+
+```
+
+## Supplementary Figure 3
+```{r}
+
+# Loads qPCR data (Source data)
+qPCR_data <- read.delim("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Refereees/qPCR analyses/RTqPCR_data.csv") 
+
+# Rearranges factors for beautiful plotting
+order_of_treatment <- c("LB", "COL", "AZI", "ERT")  
+order_of_strains <- c("J53-K161","BW-pBAD-OXA_noAra","BW-pBAD-OXA_Ara", "J53-pUN-OXA")  
+order_of_name <-c("pOXA-48","pBAD-OXA-48+Arabinose","pBAD-OXA-48","pUN-OXA-48") 
+
+qPCR_data$strain <- factor(qPCR_data$strain, levels = order_of_strains)
+qPCR_data$treatment <- factor(qPCR_data$treatment, levels = order_of_treatment)
+qPCR_data$name<- factor(qPCR_data$name, levels=order_of_name)
+
+#Plots Supp. Figure 3
+qPCR_data %>% 
+  ggplot(aes(log2FC, x=treatment , color=name, fill=name))+
+  geom_hline(yintercept = 0, lty=3, color="grey")+
+  geom_boxplot(alpha=.5)+
+  geom_point()+
+  facet_grid(~name)+
+  scale_color_manual(values=c("#a33535ff", "#071952", "#2268AD", "#6eadacff"))+
+  scale_fill_manual(values=c("#a33535ff", "#071952", "#2268AD", "#6eadacff"))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        aspect.ratio = 1, 
+        strip.background = element_blank(), 
+        legend.position = "none", 
+        axis.title.y = ggtext::element_markdown())+
+  scale_y_continuous(breaks = c(0, 5, 10, 15))+
+  labs(x="", y="*bla*OXA-48 expression (log2FC)")
+
+```
+
+
+#### Stats on Supp. Figure 3
+```{r, echo=F}
+# Runs Stats
+
+dataAOV<-qPCR_data %>% filter(treatment=="LB")
+summary(aov(log2FC~name, data=dataAOV))
+TukeyHSD(aov(log2FC~name, data=dataAOV))
+```
+
+
+## Supplementary Figure 9
+```{r}
+
+CTX_R<- EcoR_pun_long_c %>% filter(Antibiotic=="CTX", Original_name!="OXA48",Strain!="J53")
+
+mics_CTX<-CTX_R%>% 
+  filter(Original_name!="empty") %>% 
+  group_by(Strain, Original_name) %>% 
+  ggplot()+
+  geom_boxplot(aes(y=MIC,x=Strain ,color=Original_name,fill=Original_name, group=interaction(Strain, Original_name)), alpha=0.2, position=position_dodge(width=0.9), outlier.shape = NA)+
+  geom_point(aes(y=MIC,x=Strain ,color=Original_name, group=interaction(Strain, Original_name)), position=position_jitterdodge(dodge.width=0.9))+
+  #scale_y_continuous(trans='log2', limits = c(0.03, 64), breaks = c(0.03, 0.06, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32), labels = c("0.03", "0.06","0.125", "0.25", "0.5", "1", "2", "4", "8", "16", "32"))+
+  scale_y_continuous(trans='log2', limits = c(0.02, 64), breaks = c(0.06, 0.25, 1, 4, 16, 64), labels = c("0.06", "0.25", "1", "4", "16", "64"))+
+  scale_color_manual(values = c("darkred", "grey30"))+
+  scale_fill_manual(values = c("darkred", "grey30"))+
+  theme_bw()+ 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        axis.text.x = element_text(angle = 45, hjust=1))+
+  labs(y = "Minimal inhibitory concentration (mg/L)" , x="")+
+  ggtitle("Cefotaxime")
+
+
+ERT_R<- EcoR_pun_long_c %>% filter(Antibiotic=="ERT", Original_name!="CTXM15",Strain!="J53")
+
+mics_ERT<-ERT_R%>% 
+  filter(Original_name!="empty") %>% 
+  group_by(Strain, Original_name) %>% 
+  ggplot()+
+  geom_boxplot(aes(y=MIC,x=Strain ,color=Original_name,fill=Original_name, group=interaction(Strain, Original_name)), alpha=0.2, position=position_dodge(width=0.9), outlier.shape = NA)+
+  geom_point(aes(y=MIC,x=Strain ,color=Original_name,fill=Original_name, group=interaction(Strain, Original_name)), position=position_jitterdodge(dodge.width=0.9))+
+  scale_y_continuous(trans='log2', limits = c(0.003, 8), breaks = c(0.007, 0.03, 0.125, 0.5, 2, 8), labels = c("0.007", "0.03", "0.125", "0.5", "2", "8"))+
+  scale_color_manual(values = c("darkred", "grey30"))+
+  scale_fill_manual(values = c("darkred", "grey30"))+
+  theme_bw()+ 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        axis.text.x = element_text(angle = 45, hjust=1))+
+  labs(y = "Minimal inhibitory concentration (mg/L)" , x="")+
+  ggtitle("Ertapenem")
+
+ggarrange(mics_ERT,mics_CTX)
+
+```
+
+
+
+## Supplementary Figure 10
+Plot MIC correlations of experimental data 
+```{r 0}
+## plot AZI 
+AZI_corr <- mics_wide %>%
+  # select(- Plasmid_backbone, -Strain, -Betalactamase, -Original_name,  -replica) %>%
+  select(AZI, COL, CTX, AMC,ERT, MER, IMP, AZM, blaR, Figure) %>%
+  pivot_longer(cols = c("AZI", "COL"), names_to = "Antibiotic", values_to = "AZI_COL") %>% 
+  gather(Antibiotic2, MIC2, -c(blaR, Figure, Antibiotic, AZI_COL)) %>%
+  mutate(MIC2=as.numeric(MIC2)) %>% 
+  filter(Antibiotic=="AZI") %>% 
+  ggplot()+
+  geom_smooth(aes(x=AZI_COL, y=MIC2), method = "lm",  fullrange=T, color="red", alpha=.2, lty=3)+
+  geom_jitter(aes(x=AZI_COL, y=MIC2, color=blaR, fill=blaR), size=2, width = .15, height = .15, alpha=.25, shape=22)+
+  scale_y_continuous(trans='log2', 
+                     limits=c(0.002, 32768),
+                     #labels = scales::number_format(accuracy = 0.1)
+                     breaks=round(2^seq(-15, 15, by=6), 4)
+  )+
+  scale_x_continuous(trans="log2", limits = c(1,16))+
+  facet_grid(~Antibiotic~Antibiotic2, scales = "free", drop=T)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        strip.background = element_blank(), 
+       legend.position = "none"
+  )+
+  scale_color_manual(values=c(  "#a33535ff","#6eadacff"))+
+  scale_fill_manual(values=c("#a33535ff","#6eadacff"))+
+  scale_shape_manual(values=c(0,1,21,22, 23, 24))+
+  labs(x="AZI or COL MIC (mg/L)", y= paste0("\U03B2","-lactam MIC (mg/L)"),
+       shape= "Data from", 
+       color=paste0("\U03B2","-lactamase"), 
+       fill=paste0("\U03B2","-lactamase"))
+
+## plot COL 
+COL_corr<- mics_wide %>%
+  # select(- Plasmid_backbone, -Strain, -Betalactamase, -Original_name,  -replica) %>%
+  select(AZI, COL, CTX, AMC,ERT, MER, IMP, AZM, blaR, Figure) %>%
+  pivot_longer(cols = c("AZI", "COL"), names_to = "Antibiotic", values_to = "AZI_COL") %>% 
+  gather(Antibiotic2, MIC2, -c(blaR, Figure, Antibiotic, AZI_COL)) %>%
+  mutate(MIC2=as.numeric(MIC2)) %>% 
+  filter(Antibiotic=="COL") %>% 
+  ggplot()+
+  geom_smooth(aes(x=AZI_COL, y=MIC2), method = "lm",  fullrange=T, color="red", alpha=.2, lty=3)+
+  geom_jitter(aes(x=AZI_COL, y=MIC2, color=blaR, fill=blaR), size=2, width = .15, height = .15, alpha=.25, shape=22)+
+  scale_y_continuous(trans='log2', 
+                     limits=c(0.002, 32768),
+                     #labels = scales::number_format(accuracy = 0.1)
+                     breaks=round(2^seq(-15, 15, by=6), 4)
+  )+
+  scale_x_continuous(trans="log2", limits = c(1,16))+
+  facet_grid(~Antibiotic~Antibiotic2, scales = "free", drop=T)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        strip.background = element_blank(), 
+        legend.position = "none"
+  )+
+  scale_color_manual(values=c( "#a33535ff","#2268AD"))+
+  scale_fill_manual(values=c("#a33535ff","#2268AD"))+
+  scale_shape_manual(values=c(0,1,21,22, 23, 24))+
+  labs(x="AZI or COL MIC (mg/L)", y= paste0("\U03B2","-lactam MIC (mg/L)"),
+       shape= "Data from", 
+       color=paste0("\U03B2","-lactamase"), 
+       fill=paste0("\U03B2","-lactamase"))
+
+ggarrange(COL_corr, AZI_corr, ncol = 1)
+
+```
+
+### Stats on Supp. Figure 10
+```{r, echo=FALSE}
+# Statistical analyses. 
+mics_wide %>% 
+  # select(- Plasmid_backbone, -Strain, -Betalactamase, -Original_name,  -replica) %>%
+  select(AZI, COL, CTX, AMC,ERT, MER, IMP, AZM,blaR, Figure) %>%
+  pivot_longer(cols = c("AZI", "COL"), names_to = "Antibiotic", values_to = "AZI_COL") %>%
+  gather(Antibiotic2, MIC2, -c(blaR, Figure, Antibiotic, AZI_COL)) %>%
+  mutate(MIC2=as.numeric(MIC2)) %>%
+  filter(!is.na(MIC2)) %>% 
+  group_by(Antibiotic, Antibiotic2) %>% 
+  summarise(correlation=broom::tidy(cor.test(AZI_COL, MIC2, 
+                                             use="pairwise.complete.obs",
+                                             method="spe"))) %>% 
+  filter(correlation$p.value<0.05)
+```
+
+
+## Supplementary Figure 11
+Correlations without beta-lactamase producer
+```{r }
+#Stats without beta-lactamase producers
+
+stats_no_betalact <- mics_wide %>% filter(Betalactamase!="empty", Betalactamase!="OXA48DEL") %>% 
+  # select(- Plasmid_backbone, -Strain, -Betalactamase, -Original_name,  -replica) %>%
+  select(AZI, COL, CTX, AMC,ERT, MER, IMP, AZM, blaR, Figure) %>%
+  # select(AZI, COL, CTX, AMC,ERT, blaR, Figure) %>%
+  pivot_longer(cols = c("AZI", "COL"), names_to = "Antibiotic", values_to = "AZI_COL") %>%
+  gather(Antibiotic2, MIC2, -c(blaR, Figure, Antibiotic, AZI_COL)) %>%
+  mutate(MIC2=as.numeric(MIC2)) %>%
+  filter(!is.na(MIC2)) %>% 
+  group_by(Antibiotic, Antibiotic2) %>% 
+  summarise(correlation=broom::tidy(cor.test(AZI_COL, MIC2, 
+                                             use="pairwise.complete.obs",
+                                             method="spe")))
+
+#plot significant
+mics_wide %>%  
+  filter(Betalactamase!="empty", Betalactamase!="OXA48DEL") %>% 
+  select(AZI, COL, CTX, AMC,ERT, MER, IMP, AZM,blaR, Figure) %>%
+  pivot_longer(cols = c("AZI", "COL"), names_to = "Antibiotic", values_to = "AZI_COL") %>%
+  gather(Antibiotic2, MIC2, -c(blaR, Figure, Antibiotic, AZI_COL)) %>%
+  mutate(MIC2=as.numeric(MIC2)) %>%
+  filter(Antibiotic=="COL" | Antibiotic=="AZI") %>% 
+  left_join(stats_no_betalact) %>% 
+  filter(correlation$p.value<0.05) %>% 
+  ggplot()+
+  geom_smooth(aes(x=AZI_COL, y=MIC2), method = "lm",  fullrange=T, color="red", alpha=.2, lty=3)+
+  geom_jitter(aes(x=AZI_COL, y=MIC2, color=Antibiotic, fill=Antibiotic), size=2, width = .15, height = .15, alpha=.2, shape=22)+
+  scale_y_continuous(trans='log2', 
+                     #labels = scales::number_format(accuracy = 0.1)
+                     breaks=round(2^seq(-15, 15, by=6), 4)
+  )+
+  scale_x_continuous(trans="log2")+
+  facet_wrap(~Antibiotic~Antibiotic2,  drop=T, ncol = 4)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), aspect.ratio = 1, 
+        strip.background = element_blank(), 
+        legend.position = "none"
+  )+
+  scale_color_manual(values=c(  "#6eadacff", "#2268AD"))+
+  scale_fill_manual(values=c( "#6eadacff","#2268AD"))+
+  scale_shape_manual(values=c(0,1,21,22, 23, 24))+
+  labs(x="AZI or COL MIC (mg/L)", y= paste0("\U03B2","-lactam MIC (mg/L)"),
+       shape= "Data from", 
+       color=paste0("\U03B2","-lactamase"), 
+       fill=paste0("\U03B2","-lactamase"))
+
+```
+
+
+## Supplementary Figure 12
+```{r }
+
+ATLAS_Corr_Coli<- ATLAS_good %>%
+  left_join(Antibiotic_fam, by=c("Variable"="Antibiotic")) %>%
+  mutate(Variable=Short_beauti) %>%
+  rename(Isolate=`Isolate Id`) %>%
+  filter(Species=="Escherichia coli") %>% 
+  # filter(!is.na(Log2_MIC)) %>% 
+  group_by(Isolate, Variable) %>%
+  summarise(Log2_MIC=max(Log2_MIC, na.rm=T)) %>% 
+  # ungroup() %>% 
+  # group_by(Variable) %>% 
+  # mutate(N=n()) %>% View()
+  filter(Variable!="AZI") %>% 
+  pivot_wider(names_from = Variable, values_from = Log2_MIC,   values_fill = NA) %>%
+  column_to_rownames("Isolate") %>% 
+  mutate(data="ATLAS")
+
+Ntreshold<- 50
+
+Beauti_Mero<- ATLAS_Corr_Coli %>% 
+  filter(!is.na(ColistinP80)) %>% 
+  mutate(Meropenem_good=2^(Meropenem)) %>% 
+  group_by(Meropenem, Meropenem_good) %>% 
+  count() %>% 
+  left_join(ATLAS_Corr_Coli) %>% 
+  mutate(Meropenem=case_when( Meropenem<=-7 ~ -7,
+                              n>= Ntreshold ~ Meropenem,
+                             n< Ntreshold ~ -1)) %>% 
+  ggplot(aes(y=as.factor(Meropenem), x=ColistinP80, fill=(after_stat(x))))+
+  geom_density_ridges_gradient(bandwidth=1, scale=2,
+                               quantile_lines=TRUE,
+                               quantile_fun=function(x,...)mean(x))+
+  scale_x_continuous(limits = c(-7.5,5.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  scale_y_discrete(breaks=seq(-14, 10, by=1), labels=round(2^seq(-14, 10, by=1),3))+
+  scale_fill_gradient2(low="#154d84ff", mid="#A7C3DE", high="#d6e3f0ff", midpoint = -2)+#, high = "white", midpoint = -3)+
+  theme_bw()+
+  theme(panel.background = element_blank(), panel.grid = element_blank(), aspect.ratio = 1, axis.text.x = element_text(angle=45, hjust=1), 
+        legend.position = "none")+
+  labs(y="Meropenem MIC (mg/L)", x="Colistin MIC (mg/L)")
+
+Beauti_Imi<- ATLAS_Corr_Coli %>% 
+  filter(!is.na(ColistinP80)) %>% 
+  group_by(Imipenem) %>% 
+  count() %>%
+  left_join(ATLAS_Corr_Coli) %>% 
+  mutate(Imipenem=case_when( Imipenem <=-4 ~ -4,
+                             n>= Ntreshold ~ Imipenem,
+                             n< Ntreshold ~ 1)) %>% 
+  ggplot(aes(y=as.factor(Imipenem), x=ColistinP80, fill=(after_stat(x))))+
+  geom_density_ridges_gradient(bandwidth=1, scale=2,
+                               quantile_lines=TRUE,
+                               quantile_fun=function(x,...)mean(x))+
+  scale_x_continuous(limits = c(-7.5,5.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  scale_y_discrete(breaks=seq(-14, 10, by=1), labels=round(2^seq(-14, 10, by=1),3))+
+  scale_fill_gradient2(low="#154d84ff", mid="#A7C3DE", high="#d6e3f0ff", midpoint = -2)+#, high = "white", midpoint = -3)+
+  theme_bw()+
+  theme(panel.background = element_blank(), panel.grid = element_blank(), aspect.ratio = 1, axis.text.x = element_text(angle=45, hjust=1), 
+        legend.position = "none")+
+  labs(y="Imipenem MIC (mg/L)", x="Colistin MIC (mg/L)")
+
+Beauti_Dori<- ATLAS_Corr_Coli %>% 
+  filter(!is.na(ColistinP80)) %>% 
+  group_by(Doripenem) %>% 
+  count() %>% 
+  left_join(ATLAS_Corr_Coli) %>% 
+  mutate(Doripenem=case_when(Doripenem <=-6 ~ -6,
+                             n>= Ntreshold ~ Doripenem,
+                             n< Ntreshold ~ -1)) %>% 
+  ggplot(aes(y=as.factor(Doripenem), x=ColistinP80, fill=(after_stat(x))))+
+  geom_density_ridges_gradient(bandwidth=1, scale=2,
+                               quantile_lines=TRUE,
+                               quantile_fun=function(x,...)mean(x))+
+  scale_x_continuous(limits =  c(-7.5,5.5), breaks=seq(-10, 10, by=1), labels=round(2^seq(-10, 10, by=1),3))+
+  scale_y_discrete(breaks=seq(-14, 10, by=1), labels=round(2^seq(-14, 10, by=1),3))+
+  scale_fill_gradient2(low="#154d84ff", mid="#A7C3DE", high="#d6e3f0ff", midpoint = -2)+#, high = "white", midpoint = -3)+
+  theme_bw()+
+  theme(panel.background = element_blank(), panel.grid = element_blank(), aspect.ratio = 1, axis.text.x = element_text(angle=45, hjust=1), 
+        legend.position = "none")+
+  labs(y="Doripenem MIC (mg/L)", x="Colistin MIC (mg/L)")
+
+ggarrange(Beauti_Imi, Beauti_Dori, Beauti_Mero, align = "hv", nrow=1)
+
+```
+
+
+## Supplementary Figure 13
+```{r }
+
+#Essentially the same as for Fig. 5C
+cor_total_col<-cor_total %>% 
+  filter(Antibiotic=="COL") %>% 
+  select(Species, Antibiotic_2, cor2)
+
+heatmap_COL<- cor_total_col  %>% 
+  pivot_wider(names_from = Antibiotic_2, values_from = cor2)
+heatmap_COL[is.na(heatmap_COL)] <- 0
+
+heatmap_COL <-heatmap_COL %>% column_to_rownames("Species") %>% relocate(any_of(c("MER", "DOR", "IMI","AMC", "AMP",  "AZM",
+                                                                                  "PIP+TAZ","AZM+AVI",   "CTO+AVI","CAZ+AVI"))) 
+color <- colorRampPalette((c( "#071952","white")))(10)
+
+newnames <- lapply(
+  rownames(heatmap_COL),
+  function(x) bquote(italic(.(x))))
+
+pheatmapCOL<-pheatmap(heatmap_COL, color=color,cluster_cols = T, border_color = "grey", number_color = "black",
+         fontsize_number = 9, column_names_side = "top",
+         treeheight_row=10, 
+         treeheight_col=10,
+         angle_col = c("45"),
+         cellwidth = 25, 
+         labels_row = as.expression(newnames))
+
+
+cor_total_p80<-cor_total %>% 
+  filter(Antibiotic=="COLP80") %>% 
+  select(Species, Antibiotic_2, cor2)
+
+heatmap_p80<- cor_total_p80  %>% 
+  pivot_wider(names_from = Antibiotic_2, values_from = cor2)
+heatmap_p80[is.na(heatmap_p80)] <- 0
+
+heatmap_p80 <-heatmap_p80 %>% column_to_rownames("Species") %>% relocate(any_of(c("MER", "DOR", "IMI","AMC", "AMP",  "AZM",
+                                                                                  "PIP+TAZ","AZM+AVI",   "CTO+AVI","CAZ+AVI"))) 
+color <- colorRampPalette((c( "#071952","white")))(10)
+
+newnames <- lapply(
+  rownames(heatmap_p80),
+  function(x) bquote(italic(.(x))))
+
+pheatmapP80<-pheatmap(heatmap_p80, color=color,cluster_cols = T, border_color = "grey", number_color = "black",
+         fontsize_number = 9, column_names_side = "top",
+         treeheight_row=10, 
+         treeheight_col=10,
+         angle_col = c("45"),
+         cellwidth = 25, 
+         labels_row = as.expression(newnames))
+
+library(ggplotify)
+ggarrange(as.ggplot(pheatmapCOL),as.ggplot(pheatmapP80))
+
+```
