@@ -20,7 +20,7 @@ knitr::opts_chunk$set(warning=F, message=F)
 
 ## Define a path were Source Data is stored
 ```{r}
-path_to_souce_data <- "~/Science/MEGA/Scientific Projects/IRYCIS/CS/Refereees/"
+path_to_souce_data <- "~/Documents/GitHub/Collateral_Sensitivity/SourceData/"
 ```
 
 ## Loading required libraries
@@ -626,10 +626,10 @@ wilcox.test (a_wide$ECOR70_COL_pUN, a_wide$ECOR70_COL_CTXM15)
   # ATLAS data downloaded from the following dataset (https://s3-eu-west-1.amazonaws.com/amr-prototype-data/Open+Atlas_Reuse_Data.xls) 
   # originally published in Catalán et. al (doi: 10.1038/s41467-022-30635-7)
 
-ATLAS<-readxl::read_xlsx("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Atlas_Reuse_Data.xlsx")
+ATLAS<-readxl::read_xlsx(paste0(path_to_souce_data, "Atlas_Reuse_Data.xlsx"))
 
 # Antibiotic groups
-Antibiotic_fam<-read.delim("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Much_clearer_now/antibiotic_groups")
+Antibiotic_fam<-read.delim(paste0(path_to_souce_data, "antibiotic_groups"))
 
 # Reformat ATLAS data (including updating bacterial nomenclature)
 ATLAS<-ATLAS[5:dim(ATLAS)[1],]
@@ -644,7 +644,7 @@ ATLAS_good<-ATLAS %>%
 
 
 # Load a key to ensure MIC values are numeric
-Key_MICs<-read.table("~/Science/MEGA/Scientific Projects/IRYCIS/CS/PabloCatalan-atlas-ded3290/data/key_MIC_values_ALT.txt")
+Key_MICs<-read.table(paste0(path_to_souce_data,"key_MIC.txt"))
 colnames(Key_MICs)<- c("Value", "MICs_transformed", "Log2_MIC") 
 ATLAS_good<-ATLAS_good %>% left_join(Key_MICs)
 ATLAS_good<-ATLAS_good[grepl("_I", ATLAS_good$Variable)==F,]
@@ -657,7 +657,8 @@ ATLAS_good<-ATLAS_good[grepl("_I", ATLAS_good$Variable)==F,]
 ```{r}
 
 # load experimental dataset (sheet 1 on Source Data file) and rearrange it to wide format
-mics_completo<- read.csv("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Refereees/mics_completo2.csv") 
+
+mics_completo <- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="MIC Data") 
 mics_wide<- mics_completo %>% pivot_wider(names_from = Antibiotic, values_from = MIC)
 
 # Arrange data
@@ -852,7 +853,8 @@ for (species in Species_selected$Species){
 # Load  and add a key to short spp. names and antibiotic families
 CorrAll<- CorrAll.def %>% 
   left_join(Antibiotic_fam %>% rename("Antibiotic_long"="Antibiotic"), by=c("Antibiotic_2"="Short"))
-spp_short<-read.csv("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Spp.csv" )
+
+spp_short<-read.csv(paste0(path_to_souce_data, "Spp.csv" ))
 CorrAll<- CorrAll %>% left_join(spp_short) %>% mutate(Species=Short) %>% select(-Short)
 
 # Filter correlations with COL or COLP80
@@ -917,24 +919,22 @@ pheatmap(t(heatmap2), color=color,cluster_cols = T, border_color = "grey", numbe
 ```{r}
 
 # Loads qPCR data (Source data)
-qPCR_data <- read.delim("~/Science/MEGA/Scientific Projects/IRYCIS/CS/Refereees/qPCR analyses/RTqPCR_data.csv") 
+qPCR_data <- read_excel(paste0(path_to_souce_data, "Source Data.xlsx"), sheet="Supplementary Figure 3")
 
 # Rearranges factors for beautiful plotting
 order_of_treatment <- c("LB", "COL", "AZI", "ERT")  
-order_of_strains <- c("J53-K161","BW-pBAD-OXA_noAra","BW-pBAD-OXA_Ara", "J53-pUN-OXA")  
-order_of_name <-c("pOXA-48","pBAD-OXA-48+Arabinose","pBAD-OXA-48","pUN-OXA-48") 
+order_of_strains <-c("pOXA-48","pBAD-OXA-48+Arabinose","pBAD-OXA-48","pUN-OXA-48") 
 
 qPCR_data$strain <- factor(qPCR_data$strain, levels = order_of_strains)
 qPCR_data$treatment <- factor(qPCR_data$treatment, levels = order_of_treatment)
-qPCR_data$name<- factor(qPCR_data$name, levels=order_of_name)
 
 #Plots Supp. Figure 3
 qPCR_data %>% 
-  ggplot(aes(log2FC, x=treatment , color=name, fill=name))+
+  ggplot(aes(log2FC, x=treatment , color=strain, fill=strain))+
   geom_hline(yintercept = 0, lty=3, color="grey")+
   geom_boxplot(alpha=.5)+
   geom_point()+
-  facet_grid(~name)+
+  facet_grid(~strain)+
   scale_color_manual(values=c("#a33535ff", "#071952", "#2268AD", "#6eadacff"))+
   scale_fill_manual(values=c("#a33535ff", "#071952", "#2268AD", "#6eadacff"))+
   theme_bw()+
@@ -955,8 +955,8 @@ qPCR_data %>%
 # Runs Stats
 
 dataAOV<-qPCR_data %>% filter(treatment=="LB")
-summary(aov(log2FC~name, data=dataAOV))
-TukeyHSD(aov(log2FC~name, data=dataAOV))
+summary(aov(log2FC~strain, data=dataAOV))
+TukeyHSD(aov(log2FC~strain, data=dataAOV))
 ```
 
 

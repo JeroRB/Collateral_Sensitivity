@@ -1,0 +1,25 @@
+Antibiotic	Group	Group2	Group3	Short	Short_beauti
+Ampicillin	Beta-lactam	Aminopenicillins	Beta-lactam	AMP	Ampicillin
+Aztreonam	Beta-lactam	Monobactam	Beta-lactam	AZM	Aztreonam
+Cefepime	Beta-lactam	Cephalosporin	Beta-lactam	CEF	Cefepime
+Ceftaroline	Beta-lactam	Cephalosporin	Beta-lactam	CAR	Ceftaroline
+Ceftazidime	Beta-lactam	Cephalosporin	Beta-lactam	CAZ	Ceftazidime
+Ceftriaxone	Beta-lactam	Cephalosporin	Beta-lactam	CTX	Ceftriaxone
+Amoxycillin clavulanate	Beta-lactam	Beta-lactam+inhibitor	Beta-lactam	AMC	Amox + Clav
+Aztreonam avibactam	Beta-lactam	Beta-lactam+inhibitor	Beta-lactam	AZM+AVI	Azt + Avi
+Ceftaroline avibactam	Beta-lactam	Beta-lactam+inhibitor	Beta-lactam	CAR+AVI	Car + Avi
+Ceftazidime avibactam	Beta-lactam	Beta-lactam+inhibitor	Beta-lactam	CAZ+AVI	Caz + Avi
+Ceftolozane tazobactam	Beta-lactam	Beta-lactam+inhibitor	Beta-lactam	CTO+TAZ	Cto + Avi
+Piperacillin tazobactam	Beta-lactam	Beta-lactam+inhibitor	Beta-lactam	PIP+TAZ	Pip + Taz
+Doripenem	Beta-lactam	Carbapenem	Beta-lactam	DOR	Doripenem
+Ertapenem	Beta-lactam	Carbapenem	Beta-lactam	ERT	Ertapenem
+Imipenem	Beta-lactam	Carbapenem	Beta-lactam	IMI	Imipenem
+Meropenem	Beta-lactam	Carbapenem	Beta-lactam	MER	Meropenem
+Amikacin	Other	Aminoglucosides	Aminoglucosides	AMK	Amikacin
+Levofloxacin	Other	Quinolones	Quinolones	LEV	Levofloxacin
+Minocycline	Other	Tetracycline	Tetracycline	MIN	Minocycline
+Tigecycline	Other	Tetracycline	Tetracycline	TIG	Tigecycline
+ColistinP80	Other	Polymixin	Polymixin	COLP80	ColistinP80
+Colistin	Other	Polymixin	Polymixin	COL	Colistin
+Azithromycin	Other	Macrolide	Macrolide	AZI	Azithromycin
+
